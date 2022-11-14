@@ -1,5 +1,8 @@
 import networkx as nx
 import pandas as pd
+import numpy as np
+
+# from collections import defaultdict
 
 
 
@@ -20,14 +23,15 @@ class CommonNeighborCommunity:
         
         self.G = G
         
+        self.accuracy_per_actual = None
+        
         if actual_com is not None:
             self.setActualCommunities(actual_com)
 
         self.resetPredCommunities()
         self.num_pred_com = 0
         self.num_preds = 0
-        
-        
+        # self.communities_purity = {}
         
     def numCommonNeighbors(self, i, j) -> int:
         """
@@ -167,10 +171,12 @@ class CommonNeighborCommunity:
             if not self.G.nodes[i]["has_pred"]:
                 self.findCommunity(i, thres, weighted=weighted)
                 
-        if self.num_preds == self.G.order():
-            print("Made predictions for all nodes")
-        else: 
-            print(f"{self.num_preds}/{self.G.order()} nodes are made predictions")
+        self.computeAccuracies()
+                
+        # if self.num_preds == self.G.order():
+        #     print("Made predictions for all nodes")
+        # else: 
+        #     print(f"{self.num_preds}/{self.G.order()} nodes are made predictions")
         
         
     
@@ -195,6 +201,8 @@ class CommonNeighborCommunity:
             self.G.nodes[i]["has_pred"] = True
             self.num_preds += 1
         
+        # self.communities_purity[self.num_pred_com] = self.getCommunityPurity(community)
+        
         self.num_pred_com += 1
 
 
@@ -202,7 +210,6 @@ class CommonNeighborCommunity:
     def setActualCommunities(self, actual_com: dict) -> None:
         """
         Take the community dictionary and embed the actual community information into the nodes' attributes
-        Since we need the community in order, we will ascendingly handle nodes, and community of lower nodes has lower community numbers
         
         
         Parameters
@@ -211,24 +218,7 @@ class CommonNeighborCommunity:
             Actual community/ ground truth communities dictionary
         """
         
-        change_dict = {}
-        com_count = 0
-        
-        for i in self.G.nodes:
-            origin_com = actual_com[i]
-            
-            if origin_com not in change_dict: # new community
-                change_dict[origin_com] = com_count
-                com_count += 1
-                
-        for i in actual_com:
-            origin_com = actual_com[i]
-            
-            actual_com[i] = change_dict[origin_com]
-        
         nx.set_node_attributes(self.G, actual_com, name="actual_com")
-        
-        
 
     def resetPredCommunities(self) -> None:
         """
@@ -240,7 +230,10 @@ class CommonNeighborCommunity:
         self.num_preds = 0
         self.num_pred_com = 0
         
-        print("Reset all predictions")
+        self.accuracy_per_actual = None
+        # self.communities_purity = {}
+        
+        # print("Reset all predictions")
         
         
         
@@ -275,3 +268,105 @@ class CommonNeighborCommunity:
             nodes.append(i)
             
         return pd.DataFrame({"node": nodes, "pred_com": pred_com, "actual_com": actual_com}).set_index("node").sort_index()
+    
+    def computeAccuracies(self):
+        # get communities in form of dictionary
+        acutal_communities = self.getActualCommunities();
+        pred_communities = self.getPredCommunities()
+        
+        max_intersection = dict() # used to record accuracy
+        used_preds = set() # keep track of which prediction communities are considered as prediction of actual community
+        
+        for ac in acutal_communities:
+            max_intersection[ac] = 0
+            max_pred = None
+            
+            for pc in pred_communities:
+                # if we have used this prediction community,
+                # we cannot think this also is prediction for another actual community
+                if pc in used_preds: 
+                    continue
+                
+                # assign the max intersected prediction to actual communities
+                num_intersection = len(acutal_communities[ac].intersection(pred_communities[pc]))
+                if num_intersection > max_intersection[ac]:
+                    max_intersection[ac] = num_intersection
+                    max_pred = pc
+                
+            used_preds.add(max_pred)
+            
+            # calculate accuracy
+            max_intersection[ac] = max_intersection[ac] / len(acutal_communities[ac])
+                
+        self.accuracy_per_actual = max_intersection
+        
+    def getAvgAccuracy(self):
+        avg = 0.0
+        for actual_com in self.accuracy_per_actual:
+            avg += self.accuracy_per_actual[actual_com]
+            
+        return avg / len(self.accuracy_per_actual)
+    
+    def getPredCommunities(self):
+        result = {}
+        for i in self.G.nodes:
+            node = self.G.nodes[i]
+            if node["has_pred"]:
+                if node["pred_com"] not in result:
+                    result[node["pred_com"]] = set()
+                    
+                result[node["pred_com"]].add(i)
+                
+        return result
+    
+    def getActualCommunities(self):
+        result = {}
+        for i in self.G.nodes:
+            node = self.G.nodes[i]
+            if node["actual_com"] not in result:
+                result[node["actual_com"]] = set()
+                    
+            result[node["actual_com"]].add(i)
+                
+        return result
+    
+    """
+    # delete the purity related methods and variables
+    # as purity cannot evaluate the algorithm correctly
+    # specifically, to maximize the purity to 1.0
+    # the algorithm can divide each node a community 
+    
+    def getCommunityPurity(self, community):
+            counts = defaultdict(int)
+            for i in community:
+                label = self.G.nodes[i]["actual_com"]
+                counts[label] += 1
+                
+            max_count = 0
+            for label in counts:
+                if max_count < counts[label]:
+                    max_count = counts[label]
+                    
+            return max_count / len(community)
+        
+    def getAvgPurity(self):
+        mean = 0
+        for com in self.communities_purity:
+            mean += self.communities_purity[com]
+            
+        return mean / len(self.communities_purity)
+    
+    def getMinPurity(self):
+        min_purity = 2.0
+        for com in self.communities_purity:
+            if self.communities_purity[com] < min_purity:
+                min_purity = self.communities_purity[com]
+        
+        if (min_purity == 2.0):
+            print("Cannot find minimum purity")
+            return -1.0
+        
+        return min_purity
+    """
+    
+    
