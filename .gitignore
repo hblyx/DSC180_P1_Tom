@@ -132,3 +132,6 @@ dmypy.json
 .idea
 .idea/*.iml
 .idea/modules.xml
+
+.vscode/
+.vscode
