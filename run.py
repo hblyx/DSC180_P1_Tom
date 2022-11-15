@@ -1,13 +1,16 @@
 import networkx as nx
 
-from src.data import create_test_graph as test
+#from src.data import create_test_graph as test
 from src.features import read_graph as read
 from src.models import common_neighbor_community as cnc
 
 
 
-G, actual_com = test.createTestGraph()
-test.createTestData(G, actual_com)
+#G, actual_com = test.createTestGraph()
+#test.createTestData(G, actual_com)
+
+def test():
+    
 
 G = read.createGraph("test/testdata/test_graph.txt")
 actual_com = read.createActualCommunity("test/testdata/test_community.txt")
