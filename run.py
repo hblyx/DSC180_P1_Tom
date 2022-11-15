@@ -1,20 +1,22 @@
-import networkx as nx
+#!/usr/bin/env python
 
-#from src.data import create_test_graph as test
+import sys
+
 from src.features import read_graph as read
 from src.models import common_neighbor_community as cnc
 
-
-
-#G, actual_com = test.createTestGraph()
-#test.createTestData(G, actual_com)
-
+def main(targets):
+    if 'test' in targets:
+        print("Test Success:", test())
+        
 def test():
-    
+    G = read.createGraph("test/testdata/test_graph.txt")
+    actual_com = read.createActualCommunity("test/testdata/test_community.txt")
 
-G = read.createGraph("test/testdata/test_graph.txt")
-actual_com = read.createActualCommunity("test/testdata/test_community.txt")
+    CNC = cnc.CommonNeighborCommunity(G, actual_com)
+    CNC.findAllCommunities(thres=0.1, weighted=True)
+    return CNC.getAvgAccuracy() == 1.0
 
-CNC = cnc.CommonNeighborCommunity(G, actual_com)
-CNC.findAllCommunities(thres=0.1, weighted=True)
-print("Test Success:", CNC.getAvgAccuracy() == 1.0)
+if __name__ == '__main__':
+    targets = sys.argv[1:]
+    main(targets)
