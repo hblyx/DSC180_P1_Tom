@@ -14,4 +14,4 @@ actual_com = read.createActualCommunity("test/testdata/test_community.txt")
 
 CNC = cnc.CommonNeighborCommunity(G, actual_com)
 CNC.findAllCommunities(thres=0.1, weighted=True)
-print("Test Average Accuracy is:", CNC.getAvgAccuracy())
+print("Test Success:", CNC.getAvgAccuracy() == 1.0)
