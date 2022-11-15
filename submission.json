@@ -1,4 +1,4 @@
 {
-    "dockerhub-id": "hblyx/project1:latest",
+    "dockerhub-id": "hblyx/project:latest",
     "build-script": "python run.py"
 }
