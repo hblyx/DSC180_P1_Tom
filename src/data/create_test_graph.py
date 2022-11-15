@@ -1,4 +1,7 @@
-import src.random_graph as rg
+import sys
+sys.path.append('..')
+
+from src.data import random_graph as rg
 
 
 
