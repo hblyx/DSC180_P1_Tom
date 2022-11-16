@@ -269,7 +269,12 @@ class CommonNeighborCommunity:
             
         return pd.DataFrame({"node": nodes, "pred_com": pred_com, "actual_com": actual_com}).set_index("node").sort_index()
     
-    def computeAccuracies(self):
+    def computeAccuracies(self) -> None:
+        """
+        Based on predictions, compute the maximum intersected accuracies for each actual communities
+        Specifically, assign each prediction to an actual community based on how many nodes are intersected
+        """
+        
         # get communities in form of dictionary
         acutal_communities = self.getActualCommunities();
         pred_communities = self.getPredCommunities()
@@ -301,6 +306,10 @@ class CommonNeighborCommunity:
         self.accuracy_per_actual = max_intersection
         
     def getAvgAccuracy(self):
+        """
+        Output the average accuracy based on all actual communities
+        """
+        
         avg = 0.0
         for actual_com in self.accuracy_per_actual:
             avg += self.accuracy_per_actual[actual_com]
@@ -308,6 +317,11 @@ class CommonNeighborCommunity:
         return avg / len(self.accuracy_per_actual)
     
     def getPredCommunities(self):
+        """
+        Get a dictionary form of predicted communities from the graph and nodes
+        The community will be like: {community: {nodes}}
+        """
+        
         result = {}
         for i in self.G.nodes:
             node = self.G.nodes[i]
@@ -320,6 +334,11 @@ class CommonNeighborCommunity:
         return result
     
     def getActualCommunities(self):
+        """
+        Get a dictionary form of actual communities from the graph and nodes
+        The community will be like: {community: {nodes}}
+        """
+        
         result = {}
         for i in self.G.nodes:
             node = self.G.nodes[i]
