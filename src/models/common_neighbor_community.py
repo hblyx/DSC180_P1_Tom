@@ -7,7 +7,7 @@ import numpy as np
 
 
 class CommonNeighborCommunity:
-    def __init__(self, G: nx.Graph, actual_com: dict = None) -> None:
+    def __init__(self, G: nx.Graph, actual_com: dict = None, overlapping: bool = False) -> None:
         """
         Create an object to find communities based on number of common neighbors
         
@@ -31,6 +31,7 @@ class CommonNeighborCommunity:
         self.resetPredCommunities()
         self.num_pred_com = 0
         self.num_preds = 0
+        self.overlapping = False
         # self.communities_purity = {}
         
     def numCommonNeighbors(self, i, j) -> int:
@@ -292,13 +293,14 @@ class CommonNeighborCommunity:
                 if pc in used_preds: 
                     continue
                 
-                # assign the max intersected prediction to actual communities
                 num_intersection = len(acutal_communities[ac].intersection(pred_communities[pc]))
                 if num_intersection > max_intersection[ac]:
                     max_intersection[ac] = num_intersection
                     max_pred = pc
-                
-            used_preds.add(max_pred)
+                        
+            # assign the max intersected prediction to actual communities, if the actual communities are not overlapping
+            if not self.overlapping:
+                used_preds.add(max_pred)
             
             # calculate accuracy
             max_intersection[ac] = max_intersection[ac] / len(acutal_communities[ac])
