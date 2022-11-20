@@ -77,9 +77,9 @@ class CommonNeighborCommunity:
         """
         
         if weighted:
-            # sum of two nodes degree = sum of degree - 1 
-            # where the 1 is the duplicate edge from i to j
-            return num_common_neighbors >= thres * (self.G.degree[i] + self.G.degree[j] - 1)
+            # sum of two nodes degree = sum of degree - 2 
+            # where the 1 is the duplicate edge from i to j and j to i
+            return num_common_neighbors >= thres * (self.G.degree[i] + self.G.degree[j] - 2)
         else:
             return num_common_neighbors >= thres
     
