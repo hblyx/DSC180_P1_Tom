@@ -2,6 +2,8 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 
+from networkx.algorithms import community
+
 # from collections import defaultdict
 
 
@@ -307,7 +309,7 @@ class CommonNeighborCommunity:
                 
         self.accuracy_per_actual = max_intersection
         
-    def getAvgAccuracy(self):
+    def getAvgAccuracy(self) -> float:
         """
         Output the average accuracy based on all actual communities
         """
@@ -318,7 +320,7 @@ class CommonNeighborCommunity:
             
         return avg / len(self.accuracy_per_actual)
     
-    def getPredCommunities(self):
+    def getPredCommunities(self) -> dict:
         """
         Get a dictionary form of predicted communities from the graph and nodes
         The community will be like: {community: {nodes}}
@@ -335,7 +337,7 @@ class CommonNeighborCommunity:
                 
         return result
     
-    def getActualCommunities(self):
+    def getActualCommunities(self) -> dict:
         """
         Get a dictionary form of actual communities from the graph and nodes
         The community will be like: {community: {nodes}}
@@ -350,6 +352,19 @@ class CommonNeighborCommunity:
             result[node["actual_com"]].add(i)
                 
         return result
+    
+    def getModularity(self) -> float:
+        """
+        Get the modularity of paritions of preditions
+        """
+        
+        preds = self.getPredCommunities()
+        
+        coms = []
+        for com in preds:
+            coms.append(preds[com])
+        
+        return community.modularity(self.G, coms)
     
     """
     # delete the purity related methods and variables
