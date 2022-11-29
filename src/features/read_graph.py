@@ -1,7 +1,7 @@
 import networkx as nx
 
 def createGraph(path):
-    return nx.read_edgelist(path, nodetype=int)
+        return nx.read_edgelist(path, nodetype=int)
 
 def createActualCommunity(path):
     actual_com = dict()

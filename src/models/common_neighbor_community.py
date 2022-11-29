@@ -33,7 +33,7 @@ class CommonNeighborCommunity:
         self.resetPredCommunities()
         self.num_pred_com = 0
         self.num_preds = 0
-        self.overlapping = False
+        self.overlapping = overlapping
         # self.communities_purity = {}
         
     def numCommonNeighbors(self, i, j) -> int:
