@@ -4,12 +4,12 @@ import numpy as np
 
 from networkx.algorithms import community
 
-# from collections import defaultdict
+from collections import defaultdict
 
 
 
 class CommonNeighborCommunity:
-    def __init__(self, G: nx.Graph, actual_com: dict = None, overlapping: bool = False) -> None:
+    def __init__(self, G: nx.Graph, actual_com: dict = None) -> None:
         """
         Create an object to find communities based on number of common neighbors
         
@@ -33,7 +33,7 @@ class CommonNeighborCommunity:
         self.resetPredCommunities()
         self.num_pred_com = 0
         self.num_preds = 0
-        self.overlapping = overlapping
+        #self.overlapping = overlapping
         # self.communities_purity = {}
         
     def numCommonNeighbors(self, i, j) -> int:
@@ -174,8 +174,6 @@ class CommonNeighborCommunity:
             if not self.G.nodes[i]["has_pred"]:
                 self.findCommunity(i, thres, weighted=weighted)
                 
-        self.computeAccuracies()
-                
         # if self.num_preds == self.G.order():
         #     print("Made predictions for all nodes")
         # else: 
@@ -272,86 +270,36 @@ class CommonNeighborCommunity:
             
         return pd.DataFrame({"node": nodes, "pred_com": pred_com, "actual_com": actual_com}).set_index("node").sort_index()
     
-    def computeAccuracies(self) -> None:
+    def getPredCommunities(self) -> list:
         """
-        Based on predictions, compute the maximum intersected accuracies for each actual communities
-        Specifically, assign each prediction to an actual community based on how many nodes are intersected
-        """
-        
-        # get communities in form of dictionary
-        acutal_communities = self.getActualCommunities();
-        pred_communities = self.getPredCommunities()
-        
-        max_intersection = dict() # used to record accuracy
-        used_preds = set() # keep track of which prediction communities are considered as prediction of actual community
-        
-        for ac in acutal_communities:
-            max_intersection[ac] = 0
-            max_pred = None
-            
-            for pc in pred_communities:
-                # if we have used this prediction community,
-                # we cannot think this also is prediction for another actual community
-                if pc in used_preds: 
-                    continue
-                
-                num_intersection = len(acutal_communities[ac].intersection(pred_communities[pc]))
-                if num_intersection > max_intersection[ac]:
-                    max_intersection[ac] = num_intersection
-                    max_pred = pc
-                        
-            # assign the max intersected prediction to actual communities, if the actual communities are not overlapping
-            if not self.overlapping:
-                used_preds.add(max_pred)
-            
-            # calculate accuracy
-            max_intersection[ac] = max_intersection[ac] / len(acutal_communities[ac])
-                
-        self.accuracy_per_actual = max_intersection
-        
-    def getAvgAccuracy(self) -> float:
-        """
-        Output the average accuracy based on all actual communities
-        """
-        
-        avg = 0.0
-        for actual_com in self.accuracy_per_actual:
-            avg += self.accuracy_per_actual[actual_com]
-            
-        return avg / len(self.accuracy_per_actual)
-    
-    def getPredCommunities(self) -> dict:
-        """
-        Get a dictionary form of predicted communities from the graph and nodes
+        Get a list of set form of predicted communities from the graph and nodes
         The community will be like: {community: {nodes}}
         """
         
-        result = {}
+        result = defaultdict(set)
         for i in self.G.nodes:
             node = self.G.nodes[i]
             if node["has_pred"]:
-                if node["pred_com"] not in result:
-                    result[node["pred_com"]] = set()
-                    
                 result[node["pred_com"]].add(i)
                 
-        return result
+        output = [result[i] for i in result]
+                
+        return output
     
-    def getActualCommunities(self) -> dict:
+    def getActualCommunities(self) -> list:
         """
         Get a dictionary form of actual communities from the graph and nodes
         The community will be like: {community: {nodes}}
         """
         
-        result = {}
+        result = defaultdict(set)
         for i in self.G.nodes:
             node = self.G.nodes[i]
-            if node["actual_com"] not in result:
-                result[node["actual_com"]] = set()
-                    
             result[node["actual_com"]].add(i)
                 
-        return result
+        output = [result[i] for i in result]
+                
+        return output
     
     def getModularity(self) -> float:
         """

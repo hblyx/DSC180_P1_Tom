@@ -13,9 +13,6 @@ class GraphStats:
         
         nx.set_node_attributes(self.G, communities, name="community")
 
-    def getStats(self):
-        pass
-
     def getCommunityStats(self):
         """
         for the G, there are N nodes, each communitiy has m nodes
